@@ -1,0 +1,8 @@
+A_10#-22#0;             <<- tok1 ->>
+C_++--++--+-+-++-- ;    <<- tok3 ->>
+B_2020 December 03;     <<- tok2 ->>
+A_-3#156#12 ;           <<- tok1 ->>
+
+$$$ <<- division between header and catalog sections ->>
+
+"cars"

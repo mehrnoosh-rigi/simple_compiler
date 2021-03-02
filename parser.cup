@@ -1,0 +1,192 @@
+import java_cup.runtime.*;
+import java.util.*;
+import java.io.*;
+
+init with {:
+    table = new HashMap<String, HashMap<String, Double>>();
+:};
+
+
+parser code {:
+
+    public HashMap<String, HashMap<String, Double>> table;
+    
+    public void report_error(String message, Object info) {
+        StringBuffer m = new StringBuffer(message);
+        if (info instanceof Symbol) {
+            if (((Symbol)info).left != 1 && ((Symbol)info).right != 1) {
+                if (((Symbol)info).left != -1 && ((Symbol)info).right != -1) {
+                    int line = (((Symbol)info).left) + 1;
+                    int column = (((Symbol)info).right) + 1;
+                    m.append(" (line " + line + " column " + column + ")");
+                }
+            }
+            System.err.println(m);
+        }
+    }
+    
+    public Object stack(int position) {
+        return (((Symbol)stack.elementAt(tos + position)).value);
+    }
+:};
+
+
+
+//////////////////////////////////
+///// SYMBOLS DECLARATION
+/////////////////////////////////
+
+terminal TOKEN1, TOKEN2, TOKEN3;
+terminal Float PRICE;
+terminal String UNDERSCORE, EURO, SEP;
+terminal String S, CODE, CM;
+terminal String QSTRING, PERCENTAGE, MINUS, DC;
+terminal Integer UINT;
+
+non terminal prog, header;
+non terminal token1_3, tok1, tok2, tok3;
+non terminal catalog, purchases, purchase, category;
+non terminal products, pur_product;
+non terminal Integer discount;
+// non terminal HashMap products_table;
+
+
+start with prog;
+
+//////////////////////////////////
+///// GRAMMAR
+/////////////////////////////////
+
+prog ::= header SEP catalog SEP purchases;
+
+
+/******************/
+/* Header section */
+/******************/
+header ::= token1_3
+        | token1_3 tok2 token1_3
+        | token1_3 tok2 token1_3 tok2 token1_3 tok2
+;
+
+tok1 ::= TOKEN1 S;
+tok2 ::= TOKEN2 S;
+tok3 ::= TOKEN3 S;
+
+token1_3 ::= | token1_3 tok1 | token1_3 tok3
+;	
+
+// header ::= tok_
+// 	| tok_ time tok_
+// 	| tok_ time tok_ time tok_ time tok_  
+// ;
+
+// tok1 ::= TOK1 S;
+// tok2 ::= TOK2 S;
+// time ::= TIME S;
+
+// tok_ ::= | tok_ tok1 | tok_ tok2;
+
+// header ::= tok12Ls 
+// 	|tok12Ls TOK3 tok12Ls TOK3 tok12Ls
+// 	|tok12Ls TOK3 tok12Ls TOK3 tok12Ls TOK3 tok12Ls
+// ;
+
+// tok12Ls ::= tok12Ls TOK1
+// 	|tok12Ls TOK2
+// 	|
+// ;
+
+
+catalog ::= category category category | catalog category category;
+
+category ::= QSTRING:c MINUS products:tab S {:
+        parser.table.put(c, tab);
+        // (Double) max = 0;
+        // (String) carName = "";
+        // Iterate in the map to find the required entry 
+    
+        // for ((Double)value in tab.getValue()){
+        //     if(value > max){
+        //         max = value;
+        //         carName = value.
+        //     }
+        // }
+        Double max = 0;
+        String carName = null;
+        Set<Map.Entry<String,Integer>> entries=tab.entrySet();
+        for(Entry<String,Integer> entry:entries) {
+            if(entry.getValue()>max) {
+                max=entry.getValue();
+                carName=entry.getKey();
+            }
+        }
+
+        System.out.println(carName);
+        System.out.println(max);
+        // System.out.println(tab);
+        // parser.table.put()
+        // HashMap<String, Double> a = new HashMap<String, Double>();
+        // a.put("c1", (Double)19.0);
+	    // parser.table.put("test", a);
+        // RESULT = a;
+	:}
+;
+
+products ::= QSTRING QSTRING:c PRICE:u EURO {:
+                // RESULT = new HashMap<String, Double>();
+                RESULT = new HashMap<String, Double>();
+                RESULT.put(c, u);
+                // HashMap<String, Double> p = new HashMap<String, Double>();
+                // System.out.println("inside products");
+                // System.out.println(c);
+                // System.out.println(u);
+                // // RESULT.put(c, u);
+                // RESULT = c;
+
+        :}
+	   | products:tab CM QSTRING QSTRING:c PRICE:u EURO{:
+                // System.out.println("inside products 2");
+                // System.out.println(c);
+                // System.out.println(tab);
+                // // tab.put(c, u);
+                // RESULT = tab;
+                tab.put(c, u);
+		        RESULT = tab;
+        :}
+;
+
+purchases ::= purchase S| purchases purchase S; 
+
+purchase ::= QSTRING:p discount:i DC pur_product:product{: 
+                System.out.println("inside purchases");
+                // Integer number = product[0];
+                // String product_name = product[1];
+                // HashMap<String, Double> p = parser.stack(-5);
+                // Double price = p.get(product_name);
+                System.out.println(product);
+                RESULT = product;
+
+            
+	 :}
+	 |QSTRING DC pur_product:product{:
+            RESULT = product;//new HashMap<String, Double>();
+     :}
+;
+
+discount ::= MINUS UINT:i PERCENTAGE {:
+			RESULT = i;
+:};
+
+pur_product::= UINT:i QSTRING:c {:
+                    RESULT = new Object[2];
+
+                    // RESULT[0] = i;
+                    // RESULT[1] = c;
+            :}
+			| pur_product CM UINT:i QSTRING:p
+			{:
+                RESULT = new Object[2];
+                // RESULT[0] = i;
+                // RESULT[1] = c;
+            :}
+;
